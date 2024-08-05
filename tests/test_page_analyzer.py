@@ -1,6 +1,3 @@
-from page_analyzer.app import index
-
-
-def test_page_analyzer():
-    res = index()
-    assert res == 'Hello World!'
+def test_page_analyzer(client):
+    response = client.get('/')
+    assert response.status_code == 200
