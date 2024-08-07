@@ -6,7 +6,7 @@ from page_analyzer.database import (
     get_url_by_id,
     add_url,
 )
-from page_analyzer.validator import is_valid_url
+from page_analyzer.urls import is_valid_url, normalize_url
 from dotenv import load_dotenv
 from flask import (
     Flask,
@@ -61,11 +61,14 @@ def add():
     form_vals = request.form.to_dict()
     name = form_vals['url']
     if not is_valid_url(name):
+        flash('Некорректный URL', 'danger')
+        message = get_flashed_messages(with_categories=True)
         return render_template(
             "index.html",
-            message=[('danger', 'Некорректный URL')]
+            message=message
         ), 422
 
+    name = normalize_url(name)
     url_in_db = get_url_by_name(name)
     if not url_in_db:
         flash("Страница успешно добавлена", "success")
