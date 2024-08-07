@@ -22,7 +22,7 @@
             </table>
         </div>
         <h2 class="mt-5 mb-3">Проверки</h2>
-        <form method="post" action="/urls/1/checks">
+        <form method="post" action="{{ url_for('checks', id=id) }}">
         <input type="submit" class="btn btn-primary" value="Запустить проверку">
         </form>
         <div>
@@ -38,9 +38,16 @@
             </tr>
           </thead>
             <tbody>
-          <tr>
-              {# Loop through all checks #}
-          </tr>
+            {% for check in checks %}
+                <tr>
+                    <td>{{ check.id }}</td>
+                    <td>{#  #}</td>
+                    <td>{#  #}</td>
+                    <td>{#  #}</td>
+                    <td>{#  #}</td>
+                    <td>{{ check.created }}</td>
+                </tr>
+            {% endfor %}
           </tbody>
           </table>
         </div>

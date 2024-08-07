@@ -1,10 +1,12 @@
 import os
 
 from page_analyzer.database import (
-    get_all_urls,
+    get_list_urls,
     get_url_by_name,
     get_url_by_id,
     add_url,
+    add_url_check,
+    get_url_checks,
 )
 from page_analyzer.urls import is_valid_url, normalize_url
 from dotenv import load_dotenv
@@ -35,8 +37,12 @@ def index():
 
 @app.route('/urls')
 def list_urls():
-    urls = get_all_urls()
-    return render_template("layout/sites.html", urls=urls)
+    urls = get_list_urls()
+    print(urls)
+    return render_template(
+        "layout/sites.html",
+        urls=urls
+    )
 
 
 @app.route('/urls/<int:id>')
@@ -45,6 +51,7 @@ def urls(id):
     if not url:
         return render_template("layout/page_not_found.html")
 
+    checks = get_url_checks(id)
     name, created = url['name'], url['created']
     message = get_flashed_messages(with_categories=True)
     return render_template(
@@ -52,7 +59,8 @@ def urls(id):
         message=message,
         id=id,
         name=name,
-        created_at=created
+        created_at=created,
+        checks=checks
     )
 
 
@@ -77,6 +85,14 @@ def add():
         flash("Страница уже существует", "info")
 
     return redirect(url_for('urls', id=url_in_db['id']))
+
+
+@app.post('/urls/<int:id>/checks')
+def checks(id):
+    # Make check
+    add_url_check(id)
+    flash('Страница успешно проверена', 'success')
+    return redirect(url_for('urls', id=id))
 
 
 if __name__ == '__main__':
