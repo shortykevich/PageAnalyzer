@@ -25,100 +25,80 @@ def close_connection(connection):
     return None
 
 
-def get_list_urls():
-    with init_connection() as conn:
-        cursor = conn.cursor(cursor_factory=DictCursor)
-        cursor.execute("""
-            SELECT
-                u.id,
-                u.name,
-                to_char(MAX(uc.created_at), 'YYYY-MM-DD') as last_check_at
-            FROM urls AS u
-            LEFT JOIN url_checks AS uc
-                ON uc.url_id = u.id
-            GROUP BY u.id, u.name
-            ORDER BY u.id DESC, last_check_at DESC
-        """)
-        rows = cursor.fetchall()
-    commit_transaction(conn)
+def execute_sql(sql, params=(), fetchall=False):
+    conn = init_connection()
+    with conn.cursor(cursor_factory=DictCursor) as cur:
+        cur.execute(sql, params)
+        result = cur.fetchall() if fetchall else cur.fetchone()
+        commit_transaction(conn)
     close_connection(conn)
-    return rows
+    return result
+
+
+def get_urls_list():
+    sql = """
+        SELECT
+            u.id,
+            u.name,
+            to_char(MAX(uc.created_at), 'YYYY-MM-DD') as last_check_at
+        FROM urls AS u
+        LEFT JOIN url_checks AS uc
+            ON uc.url_id = u.id
+        GROUP BY u.id, u.name
+        ORDER BY u.id DESC, last_check_at DESC
+    """
+    return execute_sql(sql, fetchall=True)
 
 
 def add_url(url):
-    with init_connection() as conn:
-        cursor = conn.cursor(cursor_factory=DictCursor)
-        cursor.execute("""
-            INSERT INTO urls (name) VALUES (%s) RETURNING id
-        """, (url,))
-        row = cursor.fetchone()
-    commit_transaction(conn)
-    close_connection(conn)
-    return row
+    sql = """
+        INSERT INTO urls (name) VALUES (%s) RETURNING id
+    """
+    return execute_sql(sql, (url,))
 
 
 def get_url_by_name(name):
-    with init_connection() as conn:
-        cursor = conn.cursor(cursor_factory=DictCursor)
-        cursor.execute("""
-            SELECT
-                id,
-                name,
-                to_char(created_at, 'YYYY-MM-DD') AS created
-            FROM urls
-            WHERE name=%s
-        """, (name,))
-        row = cursor.fetchone()
-    commit_transaction(conn)
-    close_connection(conn)
-    return row if row else None
+    sql = """
+        SELECT
+            id,
+            name,
+            to_char(created_at, 'YYYY-MM-DD') AS created
+        FROM urls
+        WHERE name=%s
+    """
+    return execute_sql(sql, params=(name,))
 
 
 def get_url_by_id(id):
-    with init_connection() as conn:
-        cursor = conn.cursor(cursor_factory=DictCursor)
-        cursor.execute("""
-            SELECT
-                name,
-                to_char(created_at, 'YYYY-MM-DD') AS created
-            FROM urls
-            WHERE id=%s
-        """, (id,))
-        row = cursor.fetchone()
-    commit_transaction(conn)
-    close_connection(conn)
-    return row if row else None
+    sql = """
+        SELECT
+            name,
+            to_char(created_at, 'YYYY-MM-DD') AS created
+        FROM urls
+        WHERE id=%s
+    """
+    return execute_sql(sql, params=(id,))
 
 
 def get_url_checks(id):
-    with init_connection() as conn:
-        cursor = conn.cursor(cursor_factory=DictCursor)
-        cursor.execute("""
-            SELECT
-                id,
-                url_id,
-                status_code,
-                h1,
-                title,
-                description,
-                to_char(created_at, 'YYYY-MM-DD') AS created
-            FROM url_checks
-            WHERE url_id = %s
-            ORDER BY id DESC
-        """, (id,))
-        rows = cursor.fetchall()
-    commit_transaction(conn)
-    close_connection(conn)
-    return rows
+    sql = """
+        SELECT
+            id,
+            url_id,
+            status_code,
+            h1,
+            title,
+            description,
+            to_char(created_at, 'YYYY-MM-DD') AS created
+        FROM url_checks
+        WHERE url_id = %s
+        ORDER BY id DESC
+    """
+    return execute_sql(sql, params=(id,), fetchall=True)
 
 
 def add_url_check(id):
-    with init_connection() as conn:
-        cursor = conn.cursor(cursor_factory=DictCursor)
-        cursor.execute("""
-            INSERT INTO url_checks (url_id) VALUES (%s) RETURNING id
-        """, (id,))
-        row = cursor.fetchone()
-    commit_transaction(conn)
-    close_connection(conn)
-    return row
+    sql = """
+        INSERT INTO url_checks (url_id) VALUES (%s) RETURNING id
+    """
+    return execute_sql(sql, params=(id,))

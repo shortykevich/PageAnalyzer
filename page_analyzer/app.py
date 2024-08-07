@@ -1,15 +1,15 @@
 import os
 
+from page_analyzer.urls import is_valid_url, normalize_url
+from dotenv import load_dotenv
 from page_analyzer.database import (
-    get_list_urls,
+    get_urls_list,
     get_url_by_name,
     get_url_by_id,
     add_url,
     add_url_check,
     get_url_checks,
 )
-from page_analyzer.urls import is_valid_url, normalize_url
-from dotenv import load_dotenv
 from flask import (
     Flask,
     render_template,
@@ -37,7 +37,8 @@ def index():
 
 @app.route('/urls')
 def list_urls():
-    urls = get_list_urls()
+    urls = get_urls_list()
+
     print(urls)
     return render_template(
         "layout/sites.html",
