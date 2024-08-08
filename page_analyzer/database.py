@@ -38,7 +38,7 @@ def execute_sql(sql, params=(), fetchall=False):
 def get_urls_list():
     sql = """
         SELECT
-            u.id,
+            DISTINCT u.id,
             u.name,
             to_char(MAX(uc.created_at), 'YYYY-MM-DD') as last_check_at,
             uc.status_code
