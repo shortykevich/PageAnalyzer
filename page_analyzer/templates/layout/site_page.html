@@ -41,10 +41,10 @@
             {% for check in checks %}
                 <tr>
                     <td>{{ check.id }}</td>
-                    <td>{#  #}</td>
-                    <td>{#  #}</td>
-                    <td>{#  #}</td>
-                    <td>{#  #}</td>
+                    <td>{{ check.status_code | replace('None', '') }}</td>
+                    <td>{{ check.h1 | replace('None', '') }}</td>
+                    <td>{{ check.title | replace('None', '') }}</td>
+                    <td>{{ check.description | replace('None', '') }}</td>
                     <td>{{ check.created }}</td>
                 </tr>
             {% endfor %}

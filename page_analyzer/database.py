@@ -40,11 +40,12 @@ def get_urls_list():
         SELECT
             u.id,
             u.name,
-            to_char(MAX(uc.created_at), 'YYYY-MM-DD') as last_check_at
+            to_char(MAX(uc.created_at), 'YYYY-MM-DD') as last_check_at,
+            uc.status_code
         FROM urls AS u
         LEFT JOIN url_checks AS uc
             ON uc.url_id = u.id
-        GROUP BY u.id, u.name
+        GROUP BY u.id, u.name, uc.status_code
         ORDER BY u.id DESC, last_check_at DESC
     """
     return execute_sql(sql, fetchall=True)
@@ -97,8 +98,9 @@ def get_url_checks(id):
     return execute_sql(sql, params=(id,), fetchall=True)
 
 
-def add_url_check(id):
+def add_url_check(check):
     sql = """
-        INSERT INTO url_checks (url_id) VALUES (%s) RETURNING id
+        INSERT INTO url_checks (url_id, status_code, h1, title, description)
+        VALUES (%s, %s, %s, %s, %s) RETURNING id
     """
-    return execute_sql(sql, params=(id,))
+    return execute_sql(sql, params=tuple(check.values(),))

@@ -1,5 +1,7 @@
 import os
 
+import requests
+from page_analyzer.response_parser import parse_response
 from page_analyzer.urls import is_valid_url, normalize_url
 from dotenv import load_dotenv
 from page_analyzer.database import (
@@ -38,8 +40,6 @@ def index():
 @app.route('/urls')
 def list_urls():
     urls = get_urls_list()
-
-    print(urls)
     return render_template(
         "layout/sites.html",
         urls=urls
@@ -91,10 +91,22 @@ def add():
 @app.post('/urls/<int:id>/checks')
 def checks(id):
     # Make check
-    add_url_check(id)
+    url = get_url_by_id(id)
+    try:
+        r = requests.get(url['name'], timeout=10)
+    except requests.exceptions.RequestException:
+        flash("Произошла ошибка при проверке", "danger")
+        return redirect(url_for('urls', id=id))
+
+    check = {'id': id, 'code': r.status_code}
+
+    url_info = parse_response(r.text)
+    check.update(url_info)
+
+    add_url_check(check)
     flash('Страница успешно проверена', 'success')
     return redirect(url_for('urls', id=id))
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
