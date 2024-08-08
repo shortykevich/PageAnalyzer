@@ -2,10 +2,6 @@ from bs4 import BeautifulSoup
 from unicodedata import normalize
 
 
-def is_valid_str(s):
-    return s is not None
-
-
 def parse_response(text):
     result = {
         'h1': '',

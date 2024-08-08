@@ -68,7 +68,8 @@ def checks(id):
     try:
         r = requests.get(url['name'])
         r.raise_for_status()
-    except requests.exceptions.HTTPError:
+    except (requests.exceptions.HTTPError,
+            requests.exceptions.ConnectionError):
         flash("Произошла ошибка при проверке", "danger")
         return redirect(url_for('urls', id=id))
 
