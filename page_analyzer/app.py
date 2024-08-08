@@ -28,7 +28,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
 
-@app.route('/')
+@app.get('/')
 def index():
     message = get_flashed_messages(with_categories=True)
     return render_template(
@@ -37,7 +37,7 @@ def index():
     )
 
 
-@app.route('/urls')
+@app.get('/urls')
 def list_urls():
     urls = get_urls_list()
     return render_template(
@@ -46,23 +46,40 @@ def list_urls():
     )
 
 
-@app.route('/urls/<int:id>')
+@app.get('/urls/<int:id>')
 def urls(id):
     url = get_url_by_id(id)
     if not url:
-        return render_template("layout/page_not_found.html")
+        return render_template("layout/page_not_found.html"), 404
 
     checks = get_url_checks(id)
-    name, created = url['name'], url['created']
     message = get_flashed_messages(with_categories=True)
     return render_template(
         "layout/site_page.html",
         message=message,
-        id=id,
-        name=name,
-        created_at=created,
+        url=url,
         checks=checks
     )
+
+
+@app.post('/urls/<int:id>/checks')
+def checks(id):
+    url = get_url_by_id(id)
+    try:
+        r = requests.get(url['name'])
+        r.raise_for_status()
+    except requests.exceptions.HTTPError:
+        flash("Произошла ошибка при проверке", "danger")
+        return redirect(url_for('urls', id=id))
+
+    check = {'id': id, 'code': r.status_code}
+
+    url_info = parse_response(r.text)
+    check.update(url_info)
+
+    add_url_check(check)
+    flash('Страница успешно проверена', 'success')
+    return redirect(url_for('urls', id=id))
 
 
 @app.post('/urls')
@@ -88,25 +105,5 @@ def add():
     return redirect(url_for('urls', id=url_in_db['id']))
 
 
-@app.post('/urls/<int:id>/checks')
-def checks(id):
-    # Make check
-    url = get_url_by_id(id)
-    try:
-        r = requests.get(url['name'], timeout=10)
-    except requests.exceptions.RequestException:
-        flash("Произошла ошибка при проверке", "danger")
-        return redirect(url_for('urls', id=id))
-
-    check = {'id': id, 'code': r.status_code}
-
-    url_info = parse_response(r.text)
-    check.update(url_info)
-
-    add_url_check(check)
-    flash('Страница успешно проверена', 'success')
-    return redirect(url_for('urls', id=id))
-
-
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()

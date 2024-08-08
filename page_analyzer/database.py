@@ -73,6 +73,7 @@ def get_url_by_name(name):
 def get_url_by_id(id):
     sql = """
         SELECT
+            id,
             name,
             to_char(created_at, 'YYYY-MM-DD') AS created
         FROM urls
