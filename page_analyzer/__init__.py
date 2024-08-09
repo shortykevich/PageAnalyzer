@@ -1,5 +1,5 @@
 from page_analyzer.app import app
-from page_analyzer.urls import is_valid_url
+from page_analyzer.url_tools import is_valid_url
 
 
 __all__ = [
